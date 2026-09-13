@@ -11,14 +11,16 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from config import settings
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://postgres:postgres@localhost:5432/library",
-)
+
+# DATABASE_URL = os.getenv(
+#     "DATABASE_URL",
+#     "postgresql+psycopg://postgres:postgres@localhost:5432/library",
+# )
 
 # An engine connects lazily, when a session first performs database work.
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

@@ -6,7 +6,7 @@ install:
 
 # Start the development server with automatic reloads.
 run:
-	uv run python -m uvicorn main:app --reload
+	uv run python -m uvicorn main:app --reload --env-file .env
 
 # Catch Python syntax/import errors without needing a running PostgreSQL server.
 check:
