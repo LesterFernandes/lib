@@ -55,7 +55,7 @@ def library_enum(enum_class: type[Enum], name: str) -> SqlEnum:
 class UUIDPrimaryKeyMixin:
     """Technical primary key included on every main entity."""
 
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4, server_default=text("gen_random_uuid()"))
 
 
 class TimestampMixin:
