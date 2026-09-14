@@ -25,7 +25,8 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from database import Base
 
 
 class MemberStatus(str, Enum):
@@ -47,10 +48,6 @@ def enum_values(enum_class: type[Enum]) -> list[str]:
 
 def library_enum(enum_class: type[Enum], name: str) -> SqlEnum:
     return SqlEnum(enum_class, name=name, values_callable=enum_values)
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class UUIDPrimaryKeyMixin:
