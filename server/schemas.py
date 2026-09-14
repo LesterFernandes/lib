@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from models import MemberStatus, StaffRole
 
@@ -79,7 +79,7 @@ class BookAuthorInput(Schema):
 
 class BookCreate(Schema):
     publisher_id: UUID | None = None
-    title: str = Field(max_length=500)
+    title: str = Field(min_length=1, max_length=500)
     subtitle: str | None = Field(default=None, max_length=500)
     description: str | None = None
     language: str = Field(default="en", max_length=10)
@@ -91,10 +91,26 @@ class BookRead(BookCreate, TimestampedSchema):
     pass
 
 
+class BookUpdate(Schema):
+    publisher_id: UUID | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=500)
+    subtitle: str | None = Field(default=None, max_length=500)
+    description: str | None = None
+    language: str | None = Field(default=None, min_length=1, max_length=10)
+    authors: list[BookAuthorInput] | None = None
+    category_ids: list[UUID] | None = None
+
+    @model_validator(mode="after")
+    def require_at_least_one_change(self) -> BookUpdate:
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided for an update.")
+        return self
+
+
 class MemberCreate(Schema):
-    card_number: str = Field(max_length=50)
-    first_name: str = Field(max_length=100)
-    last_name: str = Field(max_length=100)
+    card_number: str = Field(min_length=1, max_length=50)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
     email: str | None = Field(default=None, max_length=255)
     phone: str | None = Field(default=None, max_length=50)
     address_line_1: str | None = Field(default=None, max_length=255)
@@ -109,3 +125,37 @@ class MemberCreate(Schema):
 class MemberRead(MemberCreate, TimestampedSchema):
     joined_on: date
     status: MemberStatus
+
+
+class MemberUpdate(Schema):
+    card_number: str | None = Field(default=None, min_length=1, max_length=50)
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    email: str | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=50)
+    address_line_1: str | None = Field(default=None, max_length=255)
+    address_line_2: str | None = Field(default=None, max_length=255)
+    city: str | None = Field(default=None, max_length=100)
+    postal_code: str | None = Field(default=None, max_length=20)
+    date_of_birth: date | None = None
+    expires_on: date | None = None
+    status: MemberStatus | None = None
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def require_at_least_one_change(self) -> MemberUpdate:
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided for an update.")
+        return self
+
+
+class LoanCreate(Schema):
+    book_id: UUID
+    member_id: UUID
+
+
+class LoanRead(TimestampedSchema):
+    book_id: UUID
+    member_id: UUID
+    borrowed_at: datetime
+    returned_at: datetime | None

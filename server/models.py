@@ -18,11 +18,13 @@ from sqlalchemy import (
     DateTime,
     Enum as SqlEnum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -152,6 +154,7 @@ class Book(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     category_links: Mapped[list[BookCategory]] = relationship(
         back_populates="book", cascade="all, delete-orphan"
     )
+    loans: Mapped[list[Loan]] = relationship(back_populates="book")
 
     @property
     def authors(self) -> list[BookAuthor]:
@@ -212,6 +215,44 @@ class Member(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         library_enum(MemberStatus, "member_status"), default=MemberStatus.ACTIVE, nullable=False, index=True
     )
     notes: Mapped[str | None] = mapped_column(Text)
+    loans: Mapped[list[Loan]] = relationship(back_populates="member")
+
+
+class Loan(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """A member's loan of the library's single physical copy of a book."""
+
+    __tablename__ = "loans"
+    __table_args__ = (
+        CheckConstraint(
+            "returned_at IS NULL OR returned_at >= borrowed_at",
+            name="ck_loan_returned_after_borrowed",
+        ),
+        Index(
+            "uq_loans_active_book",
+            "book_id",
+            unique=True,
+            postgresql_where=text("returned_at IS NULL"),
+        ),
+        Index(
+            "ix_loans_active_member",
+            "member_id",
+            postgresql_where=text("returned_at IS NULL"),
+        ),
+    )
+
+    book_id: Mapped[UUID] = mapped_column(
+        ForeignKey("books.id", ondelete="RESTRICT"), nullable=False
+    )
+    member_id: Mapped[UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    borrowed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    book: Mapped[Book] = relationship(back_populates="loans")
+    member: Mapped[Member] = relationship(back_populates="loans")
 
 
 ALL_MODELS: tuple[type[Base], ...] = (
@@ -223,4 +264,5 @@ ALL_MODELS: tuple[type[Base], ...] = (
     BookAuthor,
     BookCategory,
     Member,
+    Loan,
 )

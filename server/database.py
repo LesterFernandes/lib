@@ -6,13 +6,11 @@ convenience; credentials should not be committed to source code.
 """
 
 from collections.abc import Generator
-import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from config import settings
-
 
 # An engine connects lazily, when a session first performs database work.
 engine = create_engine(settings.database_url, pool_pre_ping=True)
