@@ -76,6 +76,11 @@ class BookRead(BookCreate, TimestampedSchema):
     pass
 
 
+class BookSummary(Schema):
+    id: UUID
+    title: str
+
+
 class BookUpdate(Schema):
     model_config = ConfigDict(extra="forbid")
 
@@ -156,7 +161,7 @@ class LoanRead(TimestampedSchema):
 
 
 class MemberLoanRead(LoanRead):
-    book: BookRead
+    book: BookSummary
 
 
 class MemberDetailRead(MemberRead):

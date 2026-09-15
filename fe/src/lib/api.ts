@@ -63,7 +63,7 @@ export type MemberLoan = {
   returned_at: string | null;
   created_at: string;
   updated_at: string;
-  book: Book;
+  book: Pick<Book, "id" | "title">;
 };
 
 export type MemberDetails = Member & {

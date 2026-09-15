@@ -128,6 +128,7 @@ class MemberApiTests(unittest.TestCase):
         for loan in detail["loans"]:
             self.assertEqual(loan["member_id"], member["id"])
             self.assertEqual(loan["book_id"], loan["book"]["id"])
+            self.assertEqual(set(loan["book"]), {"id", "title"})
             self.assertIn("created_at", loan)
             self.assertIn("updated_at", loan)
 

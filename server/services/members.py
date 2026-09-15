@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session, load_only, selectinload
 
-from models import Loan, Member, MemberStatus
+from models import Book, Loan, Member, MemberStatus
 from schemas import MemberCreate, MemberUpdate
 from services.exceptions import ConflictError, NotFoundError
 from services.persistence import commit_or_raise_conflict
@@ -29,7 +29,9 @@ def get_member(session: Session, member_id: UUID) -> Member:
     member = session.scalar(
         select(Member)
         .where(Member.id == member_id)
-        .options(selectinload(Member.loans).joinedload(Loan.book))
+        .options(
+            selectinload(Member.loans).joinedload(Loan.book).load_only(Book.id, Book.title)
+        )
     )
     if member is None:
         raise NotFoundError(
