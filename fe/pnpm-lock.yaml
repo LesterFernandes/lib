@@ -8,6 +8,9 @@ dependencies:
   '@base-ui/react':
     specifier: ^1.8.0
     version: 1.8.0(@types/react@19.3.0)(react-dom@19.2.8)(react@19.2.8)
+  '@tanstack/react-query':
+    specifier: ^5.102.8
+    version: 5.102.8(react@19.2.8)
   class-variance-authority:
     specifier: ^0.7.1
     version: 0.7.1
@@ -1209,6 +1212,19 @@ packages:
       postcss: 8.5.28
       tailwindcss: 4.3.3
     dev: true
+
+  /@tanstack/query-core@5.102.8:
+    resolution: {integrity: sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg==}
+    dev: false
+
+  /@tanstack/react-query@5.102.8(react@19.2.8):
+    resolution: {integrity: sha512-TYBea4OuXWD7MhaSHq069TWbFe7rcwWN6kzT7JF0OKi1K6c1gTv2IzD6A6ExJsCMozdkqBWeuIUZmu4KQg0O5A==}
+    peerDependencies:
+      react: ^18 || ^19
+    dependencies:
+      '@tanstack/query-core': 5.102.8
+      react: 19.2.8
+    dev: false
 
   /@ts-morph/common@0.27.0:
     resolution: {integrity: sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ==}
