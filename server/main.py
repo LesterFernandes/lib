@@ -4,9 +4,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from config import settings
 from database import engine
 from error_handlers import (
     application_error_handler,
@@ -15,6 +17,7 @@ from error_handlers import (
     validation_error_handler,
 )
 from routers.books import router as books_router
+from routers.catalog import router as catalog_router
 from routers.loans import router as loans_router
 from routers.members import router as members_router
 from services.exceptions import ApplicationError
@@ -43,12 +46,20 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         logger.info("Database engine disposed.")
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_origin],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_exception_handler(ApplicationError, application_error_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(SQLAlchemyError, database_error_handler)
 app.add_exception_handler(Exception, unhandled_error_handler)
 
 app.include_router(books_router)
+app.include_router(catalog_router)
 app.include_router(members_router)
 app.include_router(loans_router)
 

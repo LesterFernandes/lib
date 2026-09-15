@@ -1,4 +1,4 @@
-.PHONY: install run check migrations migrate downgrade current history check-migrations
+.PHONY: install run check test migrations migrate downgrade current history check-migrations
 
 MSG ?= migration
 REVISION ?= -1
@@ -13,7 +13,10 @@ run:
 
 # Catch Python syntax/import errors without needing a running PostgreSQL server.
 check:
-	uv run python -m compileall -q main.py database.py models.py schemas.py
+	uv run python -m compileall -q main.py database.py models.py schemas.py routers services
+
+test:
+	uv run python -m unittest discover -s tests -v
 
 # migration related scripts
 migrations:

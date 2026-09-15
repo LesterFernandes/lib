@@ -19,10 +19,8 @@ from sqlalchemy import (
     Enum as SqlEnum,
     ForeignKey,
     Index,
-    Integer,
     String,
     Text,
-    UniqueConstraint,
     func,
     text,
 )
@@ -98,9 +96,7 @@ class Author(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     full_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     biography: Mapped[str | None] = mapped_column(Text)
 
-    book_links: Mapped[list[BookAuthor]] = relationship(
-        back_populates="author", cascade="all, delete-orphan"
-    )
+    books: Mapped[list[Book]] = relationship(back_populates="author")
 
 
 class Publisher(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -113,87 +109,21 @@ class Publisher(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     books: Mapped[list[Book]] = relationship(back_populates="publisher")
 
 
-class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """A hierarchical catalogue category, such as Fiction > Mystery."""
-
-    __tablename__ = "categories"
-    __table_args__ = (
-        UniqueConstraint("name", "parent_id", name="uq_category_name_within_parent"),
-    )
-
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
-    parent_id: Mapped[UUID | None] = mapped_column(ForeignKey("categories.id"))
-
-    parent: Mapped[Category | None] = relationship(back_populates="children", remote_side="Category.id")
-    children: Mapped[list[Category]] = relationship(back_populates="parent")
-    book_links: Mapped[list[BookCategory]] = relationship(
-        back_populates="category", cascade="all, delete-orphan"
-    )
-
-
 class Book(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """A catalogue record for a title.
-
-    Aside from technical ID/audit fields, this table has only the five requested
-    book columns. Author and category memberships live in link tables.
-    """
+    """A catalogue record with one optional author and publisher."""
 
     __tablename__ = "books"
 
+    author_id: Mapped[UUID | None] = mapped_column(ForeignKey("authors.id"))
     publisher_id: Mapped[UUID | None] = mapped_column(ForeignKey("publishers.id"))
     title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
     subtitle: Mapped[str | None] = mapped_column(String(500))
     description: Mapped[str | None] = mapped_column(Text)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
 
+    author: Mapped[Author | None] = relationship(back_populates="books")
     publisher: Mapped[Publisher | None] = relationship(back_populates="books")
-    author_links: Mapped[list[BookAuthor]] = relationship(
-        back_populates="book", cascade="all, delete-orphan", order_by="BookAuthor.display_order"
-    )
-    category_links: Mapped[list[BookCategory]] = relationship(
-        back_populates="book", cascade="all, delete-orphan"
-    )
     loans: Mapped[list[Loan]] = relationship(back_populates="book")
-
-    @property
-    def authors(self) -> list[BookAuthor]:
-        """Serializer-friendly alias for author association objects."""
-        return self.author_links
-
-    @property
-    def category_ids(self) -> list[UUID]:
-        return [link.category_id for link in self.category_links]
-
-
-class BookAuthor(Base):
-    """Many-to-many book/author link with contributor role and display order."""
-
-    __tablename__ = "book_authors"
-    __table_args__ = (
-        CheckConstraint("display_order > 0", name="ck_book_author_positive_display_order"),
-        UniqueConstraint("book_id", "display_order", name="uq_book_author_display_order"),
-    )
-
-    book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"), primary_key=True)
-    author_id: Mapped[UUID] = mapped_column(ForeignKey("authors.id", ondelete="CASCADE"), primary_key=True)
-    role: Mapped[str] = mapped_column(String(50), default="author", nullable=False)
-    display_order: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-
-    book: Mapped[Book] = relationship(back_populates="author_links")
-    author: Mapped[Author] = relationship(back_populates="book_links")
-
-
-class BookCategory(Base):
-    __tablename__ = "book_categories"
-
-    book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"), primary_key=True)
-    category_id: Mapped[UUID] = mapped_column(
-        ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True
-    )
-
-    book: Mapped[Book] = relationship(back_populates="category_links")
-    category: Mapped[Category] = relationship(back_populates="book_links")
 
 
 class Member(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -259,10 +189,7 @@ ALL_MODELS: tuple[type[Base], ...] = (
     Staff,
     Author,
     Publisher,
-    Category,
     Book,
-    BookAuthor,
-    BookCategory,
     Member,
     Loan,
 )

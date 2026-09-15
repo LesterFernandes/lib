@@ -9,5 +9,6 @@ class Settings(BaseSettings):
     )
 
     database_url: str
+    frontend_origin: str = "http://localhost:3000"
 
 settings = Settings()  # Loaded from .env file

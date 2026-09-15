@@ -47,8 +47,8 @@ class AuthorCreate(Schema):
     biography: str | None = None
 
 
-class AuthorRead(AuthorCreate, TimestampedSchema):
-    pass
+class AuthorRead(AuthorCreate):
+    id: UUID
 
 
 class PublisherCreate(Schema):
@@ -57,34 +57,19 @@ class PublisherCreate(Schema):
     contact_email: str | None = Field(default=None, max_length=255)
 
 
-class PublisherRead(PublisherCreate, TimestampedSchema):
-    pass
-
-
-class CategoryCreate(Schema):
-    name: str = Field(max_length=100)
-    description: str | None = None
-    parent_id: UUID | None = None
-
-
-class CategoryRead(CategoryCreate, TimestampedSchema):
-    pass
-
-
-class BookAuthorInput(Schema):
-    author_id: UUID
-    role: str = Field(default="author", max_length=50)
-    display_order: int = Field(default=1, ge=1)
+class PublisherRead(PublisherCreate):
+    id: UUID
 
 
 class BookCreate(Schema):
+    model_config = ConfigDict(extra="forbid")
+
+    author_id: UUID | None = None
     publisher_id: UUID | None = None
     title: str = Field(min_length=1, max_length=500)
     subtitle: str | None = Field(default=None, max_length=500)
     description: str | None = None
     language: str = Field(default="en", max_length=10)
-    authors: list[BookAuthorInput] = Field(default_factory=list)
-    category_ids: list[UUID] = Field(default_factory=list)
 
 
 class BookRead(BookCreate, TimestampedSchema):
@@ -92,13 +77,14 @@ class BookRead(BookCreate, TimestampedSchema):
 
 
 class BookUpdate(Schema):
+    model_config = ConfigDict(extra="forbid")
+
+    author_id: UUID | None = None
     publisher_id: UUID | None = None
     title: str | None = Field(default=None, min_length=1, max_length=500)
     subtitle: str | None = Field(default=None, max_length=500)
     description: str | None = None
     language: str | None = Field(default=None, min_length=1, max_length=10)
-    authors: list[BookAuthorInput] | None = None
-    category_ids: list[UUID] | None = None
 
     @model_validator(mode="after")
     def require_at_least_one_change(self) -> BookUpdate:
