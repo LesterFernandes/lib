@@ -23,6 +23,53 @@ export type Book = {
 
 export type BookPayload = Omit<Book, "id">;
 
+export type MemberStatus = "active" | "suspended" | "expired" | "inactive";
+
+export type MemberListItem = {
+  id: string;
+  card_number: string;
+  first_name: string;
+  last_name: string;
+};
+
+export type Member = MemberListItem & {
+  email: string | null;
+  phone: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  postal_code: string | null;
+  date_of_birth: string | null;
+  joined_on: string;
+  expires_on: string | null;
+  status: MemberStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MemberPayload = Omit<
+  Member,
+  "id" | "joined_on" | "created_at" | "updated_at"
+> & {
+  joined_on?: string;
+};
+
+export type MemberLoan = {
+  id: string;
+  book_id: string;
+  member_id: string;
+  borrowed_at: string;
+  returned_at: string | null;
+  created_at: string;
+  updated_at: string;
+  book: Book;
+};
+
+export type MemberDetails = Member & {
+  loans: MemberLoan[];
+};
+
 type ErrorBody = {
   error?: {
     message?: string;
@@ -87,6 +134,21 @@ export function updateBook(
 ): Promise<Book> {
   return apiRequest<Book>(`/books/${bookId}`, {
     method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getMembers(): Promise<MemberListItem[]> {
+  return apiRequest<MemberListItem[]>("/members");
+}
+
+export function getMember(memberId: string): Promise<MemberDetails> {
+  return apiRequest<MemberDetails>(`/members/${memberId}`);
+}
+
+export function createMember(payload: MemberPayload): Promise<Member> {
+  return apiRequest<Member>("/members", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }

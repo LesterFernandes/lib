@@ -104,13 +104,21 @@ class MemberCreate(Schema):
     city: str | None = Field(default=None, max_length=100)
     postal_code: str | None = Field(default=None, max_length=20)
     date_of_birth: date | None = None
+    joined_on: date = Field(default_factory=date.today)
     expires_on: date | None = None
+    status: MemberStatus = MemberStatus.ACTIVE
     notes: str | None = None
 
 
 class MemberRead(MemberCreate, TimestampedSchema):
-    joined_on: date
-    status: MemberStatus
+    pass
+
+
+class MemberListItem(Schema):
+    id: UUID
+    card_number: str
+    first_name: str
+    last_name: str
 
 
 class MemberUpdate(Schema):
@@ -145,3 +153,11 @@ class LoanRead(TimestampedSchema):
     member_id: UUID
     borrowed_at: datetime
     returned_at: datetime | None
+
+
+class MemberLoanRead(LoanRead):
+    book: BookRead
+
+
+class MemberDetailRead(MemberRead):
+    loans: list[MemberLoanRead]

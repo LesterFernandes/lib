@@ -3,8 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type BookPayload,
   createBook,
+  createMember,
   getAuthors,
   getBook,
+  getMember,
+  getMembers,
   getPublishers,
   updateBook,
 } from "@/lib/api";
@@ -13,6 +16,8 @@ const libraryQueryKeys = {
   authors: ["authors"] as const,
   publishers: ["publishers"] as const,
   book: (bookId: string) => ["books", bookId] as const,
+  members: ["members"] as const,
+  member: (memberId: string) => ["members", memberId] as const,
 };
 
 export function useAuthors() {
@@ -62,5 +67,29 @@ export function useUpdateBook() {
     onSuccess: (book) => {
       queryClient.setQueryData(libraryQueryKeys.book(book.id), book);
     },
+  });
+}
+
+export function useMembers() {
+  return useQuery({
+    queryKey: libraryQueryKeys.members,
+    queryFn: getMembers,
+  });
+}
+
+export function useMember(memberId: string) {
+  return useQuery({
+    queryKey: libraryQueryKeys.member(memberId),
+    queryFn: () => getMember(memberId),
+  });
+}
+
+export function useCreateMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createMember,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: libraryQueryKeys.members }),
   });
 }
