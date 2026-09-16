@@ -61,14 +61,14 @@ Open [localhost:3000](http://localhost:3000). The frontend uses the API at `http
 
 ## Pages and features
 
-| Page                  | Features                                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                   | Dashboard with links to Books and Members.                                                                                                        |
-| `/books`              | Browse books, see current loans with borrower details and borrowing times, and open records for editing.                                          |
-| `/books/add`          | Add a book with an optional author and publisher.                                                                                                 |
-| `/books/[bookId]`     | Edit a book's details.                                                                                                                            |
-| `/members`            | Browse active members and open their profiles.                                                                                                    |
-| `/members/add`        | Register a member with contact and membership details.                                                                                            |
-| `/members/[memberId]` | View member details and borrowing history, borrow books, and record returns. Only active members can borrow; each book can have one current loan. |
+| Page                  | Features                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                   | Dashboard with links to Books and Members.                                                                                                 |
+| `/books`              | Browse books, see current loans with borrower details and borrowing times, and open records for editing.                                   |
+| `/books/add`          | Add a book with an optional author and publisher.                                                                                          |
+| `/books/[bookId]`     | Edit a book's details.                                                                                                                     |
+| `/members`            | Browse active members and open their profiles.                                                                                             |
+| `/members/add`        | Register a member with contact and membership details.                                                                                     |
+| `/members/[memberId]` | View member details and borrowing history, borrow books, and record returns. Only members can borrow; each book can have one current loan. |
 
 The books page uses `GET /books?include_loans=true` to highlight current loans and show borrower details. The API flag defaults to `false` for other callers.
