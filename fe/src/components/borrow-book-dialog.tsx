@@ -28,7 +28,7 @@ export function BorrowBookDialog({
   onBorrowed,
 }: BorrowBookDialogProps) {
   const [open, setOpen] = useState(false);
-  const booksQuery = useBooks(open);
+  const booksQuery = useBooks({ enabled: open });
   const borrowMutation = useBorrowBook();
 
   function handleOpenChange(nextOpen: boolean) {

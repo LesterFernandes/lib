@@ -18,7 +18,9 @@ import {
 const libraryQueryKeys = {
   authors: ["authors"] as const,
   publishers: ["publishers"] as const,
-  books: ["books"] as const,
+  bookLists: ["books", "list"] as const,
+  books: (includeLoans: boolean) =>
+    ["books", "list", { includeLoans }] as const,
   book: (bookId: string) => ["books", bookId] as const,
   members: ["members"] as const,
   member: (memberId: string) => ["members", memberId] as const,
@@ -38,10 +40,18 @@ export function usePublishers() {
   });
 }
 
-export function useBooks(enabled = true) {
+type BooksQueryOptions = {
+  enabled?: boolean;
+  includeLoans?: boolean;
+};
+
+export function useBooks({
+  enabled = true,
+  includeLoans = false,
+}: BooksQueryOptions = {}) {
   return useQuery({
-    queryKey: libraryQueryKeys.books,
-    queryFn: getBooks,
+    queryKey: libraryQueryKeys.books(includeLoans),
+    queryFn: () => getBooks(includeLoans),
     enabled,
   });
 }
@@ -62,8 +72,7 @@ export function useCreateBook() {
     onSuccess: (book) => {
       queryClient.setQueryData(libraryQueryKeys.book(book.id), book);
       return queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.books,
-        exact: true,
+        queryKey: libraryQueryKeys.bookLists,
       });
     },
   });
@@ -83,8 +92,7 @@ export function useUpdateBook() {
     onSuccess: (book) => {
       queryClient.setQueryData(libraryQueryKeys.book(book.id), book);
       return queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.books,
-        exact: true,
+        queryKey: libraryQueryKeys.bookLists,
       });
     },
   });
@@ -120,10 +128,13 @@ export function useBorrowBook() {
   return useMutation({
     mutationFn: borrowBook,
     onSuccess: (loan) =>
-      queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.member(loan.member_id),
-        exact: true,
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: libraryQueryKeys.member(loan.member_id),
+          exact: true,
+        }),
+        queryClient.invalidateQueries({ queryKey: libraryQueryKeys.bookLists }),
+      ]),
   });
 }
 
@@ -133,9 +144,12 @@ export function useReturnBook() {
   return useMutation({
     mutationFn: returnBook,
     onSuccess: (loan) =>
-      queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.member(loan.member_id),
-        exact: true,
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: libraryQueryKeys.member(loan.member_id),
+          exact: true,
+        }),
+        queryClient.invalidateQueries({ queryKey: libraryQueryKeys.bookLists }),
+      ]),
   });
 }

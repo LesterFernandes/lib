@@ -26,7 +26,9 @@ export type BookPayload = Omit<Book, "id">;
 export type BookListItem = Pick<
   Book,
   "id" | "title" | "author_id" | "publisher_id"
->;
+> & {
+  loans?: BookLoan[];
+};
 
 export type MemberStatus = "active" | "suspended" | "expired" | "inactive";
 
@@ -71,6 +73,10 @@ export type Loan = {
 };
 
 export type LoanPayload = Pick<Loan, "book_id" | "member_id">;
+
+export type BookLoan = Loan & {
+  member: MemberListItem;
+};
 
 export type MemberLoan = Loan & {
   book: Pick<Book, "id" | "title">;
@@ -131,8 +137,10 @@ export function getBook(bookId: string): Promise<Book> {
   return apiRequest<Book>(`/books/${bookId}`);
 }
 
-export function getBooks(): Promise<BookListItem[]> {
-  return apiRequest<BookListItem[]>("/books");
+export function getBooks(includeLoans = false): Promise<BookListItem[]> {
+  return apiRequest<BookListItem[]>(
+    includeLoans ? "/books?include_loans=true" : "/books",
+  );
 }
 
 export function createBook(payload: BookPayload): Promise<Book> {
