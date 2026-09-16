@@ -1,5 +1,3 @@
-"""Read-only author and publisher catalogue routes."""
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 

@@ -1,3 +1,21 @@
 .venv/
 __pycache__/
 *.py[cod]
+
+# Local tests and test configuration
+/tests/
+test_*.py
+*_test.py
+conftest.py
+pytest.ini
+.coveragerc
+
+# Test caches and reports
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+/htmlcov/
+/coverage.xml
+/junit.xml

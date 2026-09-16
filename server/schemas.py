@@ -1,8 +1,3 @@
-"""Pydantic request/response shapes for the future REST interface.
-
-The schemas validate HTTP input but contain no persistence operations.
-"""
-
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -37,8 +32,6 @@ class StaffCreate(StaffFields):
 
 
 class StaffRead(StaffFields, TimestampedSchema):
-    """Never returns password or password_hash."""
-
     is_active: bool
 
 

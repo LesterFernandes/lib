@@ -1,11 +1,7 @@
-"""Exceptions representing expected, safe-to-return application errors."""
-
 from typing import Any
 
 
 class ApplicationError(Exception):
-    """Base exception translated to a structured HTTP error response."""
-
     status_code = 500
     code = "internal_error"
     message = "An unexpected error occurred."

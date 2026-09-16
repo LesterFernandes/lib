@@ -11,6 +11,9 @@ export default function BooksPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
+      <Link href="/" className="text-sm underline underline-offset-4">
+        Back to dashboard
+      </Link>
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Books</h1>
         <Link

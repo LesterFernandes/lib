@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Verify that PostgreSQL is available before serving requests."""
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
@@ -45,7 +44,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         engine.dispose()
         logger.info("Database engine disposed.")
 
-app = FastAPI(lifespan=lifespan)
+
+app = FastAPI(title="Library API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
@@ -66,6 +66,5 @@ app.include_router(loans_router)
 
 @app.get("/")
 async def read_root() -> dict[str, str]:
-    """A small JSON endpoint to confirm the server is running."""
     return {"message": "Hello from FastAPI!"}
 

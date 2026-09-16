@@ -1,5 +1,3 @@
-"""Shared transaction helpers for synchronous SQLAlchemy services."""
-
 from collections.abc import Callable
 
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +11,6 @@ def commit_or_raise_conflict(
     *,
     conflict_factory: Callable[[], ConflictError],
 ) -> None:
-    """Commit a transaction and turn constraint violations into API-safe errors."""
     try:
         session.commit()
     except IntegrityError as exc:

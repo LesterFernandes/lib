@@ -140,25 +140,25 @@ export function MemberForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
-    const data = new FormData(event.currentTarget);
-    const value = (name: keyof MemberPayload) =>
-      String(data.get(name) ?? "").trim();
+    const formData = new FormData(event.currentTarget);
+    const getFieldValue = (name: keyof MemberPayload) =>
+      String(formData.get(name) ?? "").trim();
 
     const payload: MemberPayload = {
-      card_number: value("card_number"),
-      first_name: value("first_name"),
-      last_name: value("last_name"),
-      email: value("email") || null,
-      phone: value("phone") || null,
-      address_line_1: value("address_line_1") || null,
-      address_line_2: value("address_line_2") || null,
-      city: value("city") || null,
-      postal_code: value("postal_code") || null,
-      date_of_birth: value("date_of_birth") || null,
-      joined_on: value("joined_on") || undefined,
-      expires_on: value("expires_on") || null,
-      status: value("status") as MemberStatus,
-      notes: value("notes") || null,
+      card_number: getFieldValue("card_number"),
+      first_name: getFieldValue("first_name"),
+      last_name: getFieldValue("last_name"),
+      email: getFieldValue("email") || null,
+      phone: getFieldValue("phone") || null,
+      address_line_1: getFieldValue("address_line_1") || null,
+      address_line_2: getFieldValue("address_line_2") || null,
+      city: getFieldValue("city") || null,
+      postal_code: getFieldValue("postal_code") || null,
+      date_of_birth: getFieldValue("date_of_birth") || null,
+      joined_on: getFieldValue("joined_on") || undefined,
+      expires_on: getFieldValue("expires_on") || null,
+      status: getFieldValue("status") as MemberStatus,
+      notes: getFieldValue("notes") || null,
     };
 
     if (!payload.card_number || !payload.first_name || !payload.last_name) {

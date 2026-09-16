@@ -1,5 +1,3 @@
-"""Consistent JSON error responses for the API."""
-
 import logging
 from typing import Any
 
@@ -61,7 +59,9 @@ async def database_error_handler(_: Request, exc: SQLAlchemyError) -> JSONRespon
 
 
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled error for %s %s", request.method, request.url.path, exc_info=exc)
+    logger.exception(
+        "Unhandled error for %s %s", request.method, request.url.path, exc_info=exc
+    )
     return _error_response(
         status_code=500,
         code="internal_error",

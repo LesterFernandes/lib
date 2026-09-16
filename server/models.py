@@ -1,10 +1,3 @@
-"""SQLAlchemy models for the library catalogue, members, and staff.
-
-The service represents one neighbourhood library, so it intentionally has no
-branch, inventory-copy, or circulation tables. Database tables are not created
-at import time; introduce migrations with Alembic when persistence is wired in.
-"""
-
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -26,6 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from database import Base
 
 
@@ -51,14 +45,15 @@ def library_enum(enum_class: type[Enum], name: str) -> SqlEnum:
 
 
 class UUIDPrimaryKeyMixin:
-    """Technical primary key included on every main entity."""
-
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4, server_default=text("gen_random_uuid()"))
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
 
 
 class TimestampMixin:
-    """Audit fields shared by every main entity."""
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -71,13 +66,6 @@ class TimestampMixin:
 
 
 class Staff(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """Authenticated library users.
-
-    ``password_hash`` must contain a bcrypt/Argon2-style hash, never the
-    password sent by the user. ``ADMIN`` is the management-level application
-    role and ``LIBRARIAN`` is the regular staff role.
-    """
-
     __tablename__ = "staff"
 
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
@@ -110,8 +98,6 @@ class Publisher(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 
 class Book(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """A catalogue record with one optional author and publisher."""
-
     __tablename__ = "books"
 
     author_id: Mapped[UUID | None] = mapped_column(ForeignKey("authors.id"))
@@ -139,10 +125,15 @@ class Member(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     city: Mapped[str | None] = mapped_column(String(100))
     postal_code: Mapped[str | None] = mapped_column(String(20))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
-    joined_on: Mapped[date] = mapped_column(Date, server_default=func.current_date(), nullable=False)
+    joined_on: Mapped[date] = mapped_column(
+        Date, server_default=func.current_date(), nullable=False
+    )
     expires_on: Mapped[date | None] = mapped_column(Date)
     status: Mapped[MemberStatus] = mapped_column(
-        library_enum(MemberStatus, "member_status"), default=MemberStatus.ACTIVE, nullable=False, index=True
+        library_enum(MemberStatus, "member_status"),
+        default=MemberStatus.ACTIVE,
+        nullable=False,
+        index=True,
     )
     notes: Mapped[str | None] = mapped_column(Text)
     loans: Mapped[list[Loan]] = relationship(back_populates="member")

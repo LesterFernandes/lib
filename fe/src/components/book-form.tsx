@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { ApiError, type Book, type BookPayload } from "@/lib/api";
 import {
@@ -145,24 +145,32 @@ export function BookForm({ bookId }: BookFormProps) {
   }
 
   return (
-    <form className="mx-auto w-full max-w-2xl" onSubmit={handleSubmit}>
+    <form
+      className="mx-auto w-full max-w-2xl space-y-6"
+      onSubmit={handleSubmit}
+    >
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {isEditing ? "Edit book" : "Add a book"}
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          {isEditing
+            ? "Update the catalogue record and save your changes."
+            : "Create a catalogue record for a library book."}
+        </p>
+      </header>
+
+      {error && <FieldError>{error}</FieldError>}
+      {successMessage && (
+        <p
+          role="status"
+          className="text-sm text-emerald-700 dark:text-emerald-400"
+        >
+          {successMessage}
+        </p>
+      )}
+
       <FieldSet disabled={isLoading || isSubmitting}>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {isEditing ? "Edit book" : "Add a book"}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {isEditing
-              ? "Update the catalogue record and save your changes."
-              : "Create a catalogue record for a library book."}
-          </p>
-        </div>
-
-        {error && <FieldError>{error}</FieldError>}
-        {successMessage && (
-          <p className="text-sm text-emerald-700">{successMessage}</p>
-        )}
-
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="book-title">Title</FieldLabel>
@@ -171,6 +179,7 @@ export function BookForm({ bookId }: BookFormProps) {
               value={values.title}
               onChange={(event) => updateValues({ title: event.target.value })}
               placeholder="Book title"
+              maxLength={500}
               required
             />
           </Field>
@@ -184,6 +193,7 @@ export function BookForm({ bookId }: BookFormProps) {
                 updateValues({ subtitle: event.target.value })
               }
               placeholder="Optional subtitle"
+              maxLength={500}
             />
           </Field>
 
@@ -209,6 +219,7 @@ export function BookForm({ bookId }: BookFormProps) {
                   updateValues({ language: event.target.value })
                 }
                 placeholder="en"
+                maxLength={10}
                 required
               />
             </Field>
@@ -253,18 +264,18 @@ export function BookForm({ bookId }: BookFormProps) {
             <FieldLabel htmlFor="book-author">Author</FieldLabel>
             <Select
               items={[
+                { value: noAuthorValue, label: "No author" },
                 ...authors.map((author) => ({
                   value: author.id,
                   label: author.full_name,
                 })),
               ]}
-              value={values.authorId}
+              value={values.authorId ?? noAuthorValue}
               onValueChange={(value) =>
                 updateValues({
                   authorId: value === noAuthorValue ? null : value,
                 })
               }
-              required
             >
               <SelectTrigger id="book-author" className="w-full">
                 <SelectValue placeholder="Choose an author" />
