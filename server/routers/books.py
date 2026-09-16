@@ -7,10 +7,15 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Book
-from schemas import BookCreate, BookRead, BookUpdate
-from services.books import create_book, get_book, update_book
+from schemas import BookCreate, BookListItem, BookRead, BookUpdate
+from services.books import create_book, get_book, list_books, update_book
 
 router = APIRouter(prefix="/books", tags=["books"])
+
+
+@router.get("", response_model=list[BookListItem])
+def list_books_route(session: Session = Depends(get_db)) -> list[Book]:
+    return list_books(session)
 
 
 @router.post("", response_model=BookRead, status_code=status.HTTP_201_CREATED)

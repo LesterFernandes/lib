@@ -23,6 +23,11 @@ export type Book = {
 
 export type BookPayload = Omit<Book, "id">;
 
+export type BookListItem = Pick<
+  Book,
+  "id" | "title" | "author_id" | "publisher_id"
+>;
+
 export type MemberStatus = "active" | "suspended" | "expired" | "inactive";
 
 export type MemberListItem = {
@@ -55,7 +60,7 @@ export type MemberPayload = Omit<
   joined_on?: string;
 };
 
-export type MemberLoan = {
+export type Loan = {
   id: string;
   book_id: string;
   member_id: string;
@@ -63,6 +68,11 @@ export type MemberLoan = {
   returned_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type LoanPayload = Pick<Loan, "book_id" | "member_id">;
+
+export type MemberLoan = Loan & {
   book: Pick<Book, "id" | "title">;
 };
 
@@ -121,6 +131,10 @@ export function getBook(bookId: string): Promise<Book> {
   return apiRequest<Book>(`/books/${bookId}`);
 }
 
+export function getBooks(): Promise<BookListItem[]> {
+  return apiRequest<BookListItem[]>("/books");
+}
+
 export function createBook(payload: BookPayload): Promise<Book> {
   return apiRequest<Book>("/books", {
     method: "POST",
@@ -150,5 +164,18 @@ export function createMember(payload: MemberPayload): Promise<Member> {
   return apiRequest<Member>("/members", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export function borrowBook(payload: LoanPayload): Promise<Loan> {
+  return apiRequest<Loan>("/loans", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function returnBook(loanId: string): Promise<Loan> {
+  return apiRequest<Loan>(`/loans/${loanId}/return`, {
+    method: "POST",
   });
 }

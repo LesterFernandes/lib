@@ -2,19 +2,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   type BookPayload,
+  borrowBook,
   createBook,
   createMember,
   getAuthors,
   getBook,
+  getBooks,
   getMember,
   getMembers,
   getPublishers,
+  returnBook,
   updateBook,
 } from "@/lib/api";
 
 const libraryQueryKeys = {
   authors: ["authors"] as const,
   publishers: ["publishers"] as const,
+  books: ["books"] as const,
   book: (bookId: string) => ["books", bookId] as const,
   members: ["members"] as const,
   member: (memberId: string) => ["members", memberId] as const,
@@ -34,6 +38,14 @@ export function usePublishers() {
   });
 }
 
+export function useBooks(enabled = true) {
+  return useQuery({
+    queryKey: libraryQueryKeys.books,
+    queryFn: getBooks,
+    enabled,
+  });
+}
+
 export function useBook(bookId: string | undefined) {
   return useQuery({
     queryKey: libraryQueryKeys.book(bookId ?? ""),
@@ -49,6 +61,10 @@ export function useCreateBook() {
     mutationFn: createBook,
     onSuccess: (book) => {
       queryClient.setQueryData(libraryQueryKeys.book(book.id), book);
+      return queryClient.invalidateQueries({
+        queryKey: libraryQueryKeys.books,
+        exact: true,
+      });
     },
   });
 }
@@ -66,6 +82,10 @@ export function useUpdateBook() {
       updateBook(bookId, payload),
     onSuccess: (book) => {
       queryClient.setQueryData(libraryQueryKeys.book(book.id), book);
+      return queryClient.invalidateQueries({
+        queryKey: libraryQueryKeys.books,
+        exact: true,
+      });
     },
   });
 }
@@ -91,5 +111,31 @@ export function useCreateMember() {
     mutationFn: createMember,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: libraryQueryKeys.members }),
+  });
+}
+
+export function useBorrowBook() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: borrowBook,
+    onSuccess: (loan) =>
+      queryClient.invalidateQueries({
+        queryKey: libraryQueryKeys.member(loan.member_id),
+        exact: true,
+      }),
+  });
+}
+
+export function useReturnBook() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: returnBook,
+    onSuccess: (loan) =>
+      queryClient.invalidateQueries({
+        queryKey: libraryQueryKeys.member(loan.member_id),
+        exact: true,
+      }),
   });
 }

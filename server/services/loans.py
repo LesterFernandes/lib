@@ -52,6 +52,8 @@ def borrow_book(session: Session, payload: LoanCreate) -> Loan:
         session.commit()
     except IntegrityError as exc:
         session.rollback()
+        if getattr(getattr(exc.orig, "diag", None), "constraint_name", None) != "uq_loans_active_book":
+            raise
         raise ConflictError(
             code="book_unavailable",
             message="This book is already on loan.",

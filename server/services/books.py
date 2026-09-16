@@ -1,12 +1,24 @@
-"""Book creation and update business logic."""
+"""Book lookup, creation, and update business logic."""
 
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, load_only
 
 from models import Author, Book, Publisher
 from schemas import BookCreate, BookUpdate
 from services.exceptions import NotFoundError
+
+
+def list_books(session: Session) -> list[Book]:
+    """Return all books ordered by title, loading only list fields."""
+    return list(
+        session.scalars(
+            select(Book)
+            .options(load_only(Book.id, Book.title, Book.author_id, Book.publisher_id))
+            .order_by(Book.title, Book.id)
+        )
+    )
 
 
 def get_book(session: Session, book_id: UUID) -> Book:

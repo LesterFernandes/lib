@@ -81,6 +81,11 @@ class BookSummary(Schema):
     title: str
 
 
+class BookListItem(BookSummary):
+    author_id: UUID | None
+    publisher_id: UUID | None
+
+
 class BookUpdate(Schema):
     model_config = ConfigDict(extra="forbid")
 

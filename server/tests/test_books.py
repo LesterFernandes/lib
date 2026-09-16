@@ -79,6 +79,33 @@ class BookApiTests(unittest.TestCase):
         self.assertEqual(response.json()["publisher_id"], self.publisher_id)
         self.assertEqual(self.client.get(path).json()["author_id"], self.second_id)
 
+    def test_empty_book_list(self):
+        response = self.client.get("/books")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+    def test_book_list_returns_only_requested_fields_in_title_order(self):
+        later = self.create_book(title="Zebra", description="Full description")
+        earlier = self.create_book(title="Apple", author_id=None, publisher_id=None)
+        response = self.client.get("/books")
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(
+            response.json(),
+            [
+                {"id": earlier["id"], "title": "Apple", "author_id": None, "publisher_id": None},
+                {"id": later["id"], "title": "Zebra", "author_id": self.first_id, "publisher_id": self.publisher_id},
+            ],
+        )
+
+        update = self.client.patch(
+            f"/books/{later['id']}", json={"title": "Aardvark", "author_id": self.second_id}
+        )
+        self.assertEqual(update.status_code, 200, update.text)
+        updated_list = self.client.get("/books").json()
+        self.assertEqual(updated_list[0]["id"], later["id"])
+        self.assertEqual(updated_list[0]["title"], "Aardvark")
+        self.assertEqual(updated_list[0]["author_id"], self.second_id)
+
     def test_partial_update_preserves_omitted_references_and_null_clears_them(self):
         book = self.create_book()
         path = f"/books/{book['id']}"
@@ -104,6 +131,10 @@ class BookApiTests(unittest.TestCase):
         first = self.create_book()
         second = self.create_book()
         self.assertNotEqual(first["id"], second["id"])
+        self.assertEqual(
+            {book["id"] for book in self.client.get("/books").json()},
+            {first["id"], second["id"]},
+        )
 
     def test_missing_references_keep_structured_errors(self):
         book = self.create_book()

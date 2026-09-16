@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { ChevronDownIcon } from "lucide-react";
+import { useState } from "react";
 
+import { BorrowBookDialog } from "@/components/borrow-book-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -10,11 +12,21 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { FieldError } from "@/components/ui/field";
-import { useMember } from "@/hooks/use-library";
+import { useMember, useReturnBook } from "@/hooks/use-library";
+import { type MemberLoan } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function MemberDetails({ memberId }: { memberId: string }) {
   const memberQuery = useMember(memberId);
+  const returnMutation = useReturnBook();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  function handleReturn(loan: MemberLoan) {
+    setSuccessMessage(null);
+    returnMutation.mutate(loan.id, {
+      onSuccess: () => setSuccessMessage(`Returned "${loan.book.title}".`),
+    });
+  }
 
   if (memberQuery.isPending) {
     return (
@@ -70,34 +82,6 @@ export function MemberDetails({ memberId }: { memberId: string }) {
         </p>
       </header>
 
-      <Collapsible className="rounded-lg border">
-        <h2>
-          <CollapsibleTrigger className="group hover:bg-muted/50 focus-visible:ring-ring flex w-full items-center justify-between gap-4 rounded-lg p-4 text-left font-medium outline-none focus-visible:ring-2">
-            Member details
-            <ChevronDownIcon
-              aria-hidden="true"
-              className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-180"
-            />
-          </CollapsibleTrigger>
-        </h2>
-        <CollapsibleContent>
-          <dl className="grid gap-x-8 gap-y-5 border-t p-4 sm:grid-cols-2">
-            {details.map(([label, value]) => (
-              <div key={label}>
-                <dt className="text-muted-foreground text-sm">{label}</dt>
-                <dd className="mt-1 break-words">{value || "—"}</dd>
-              </div>
-            ))}
-            <div className="sm:col-span-2">
-              <dt className="text-muted-foreground text-sm">Notes</dt>
-              <dd className="mt-1 break-words whitespace-pre-wrap">
-                {member.notes || "—"}
-              </dd>
-            </div>
-          </dl>
-        </CollapsibleContent>
-      </Collapsible>
-
       <section aria-labelledby="member-loans-heading" className="space-y-3">
         <header className="flex flex-wrap items-center justify-between gap-2">
           <div className="space-y-1">
@@ -108,18 +92,44 @@ export function MemberDetails({ memberId }: { memberId: string }) {
               <p className="text-muted-foreground text-sm">Oldest to newest</p>
             )}
           </div>
-          <span
-            className={cn(
-              "rounded-full px-3 py-1 text-sm font-medium",
-              currentLoanCount > 0
-                ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-                : "bg-muted text-muted-foreground",
-            )}
-          >
-            {currentLoanCount} current{" "}
-            {currentLoanCount === 1 ? "loan" : "loans"}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={cn(
+                "rounded-full px-3 py-1 text-sm font-medium",
+                currentLoanCount > 0
+                  ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {currentLoanCount} current{" "}
+              {currentLoanCount === 1 ? "loan" : "loans"}
+            </span>
+            <BorrowBookDialog
+              memberId={memberId}
+              disabled={member.status !== "active" || returnMutation.isPending}
+              onBorrowed={(book) => {
+                returnMutation.reset();
+                setSuccessMessage(`Borrowed "${book.title}" successfully.`);
+              }}
+            />
+          </div>
         </header>
+        {member.status !== "active" && (
+          <p className="text-muted-foreground text-sm">
+            Only active members may borrow books.
+          </p>
+        )}
+        {successMessage && (
+          <p
+            role="status"
+            className="text-sm text-emerald-700 dark:text-emerald-400"
+          >
+            {successMessage}
+          </p>
+        )}
+        {returnMutation.isError && (
+          <FieldError>{returnMutation.error.message}</FieldError>
+        )}
         {loans.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             No borrowing history yet.
@@ -167,11 +177,53 @@ export function MemberDetails({ memberId }: { memberId: string }) {
                     </time>
                   </p>
                 )}
+                {loan.returned_at === null && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={`Return ${loan.book.title}`}
+                    disabled={returnMutation.isPending}
+                    onClick={() => handleReturn(loan)}
+                  >
+                    {returnMutation.isPending &&
+                    returnMutation.variables === loan.id
+                      ? "Returning..."
+                      : "Return"}
+                  </Button>
+                )}
               </li>
             ))}
           </ol>
         )}
       </section>
+
+      <Collapsible className="rounded-lg border">
+        <h2>
+          <CollapsibleTrigger className="group hover:bg-muted/50 focus-visible:ring-ring flex w-full items-center justify-between gap-4 rounded-lg p-4 text-left font-medium outline-none focus-visible:ring-2">
+            Member details
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 transition-transform group-data-panel-open:rotate-180"
+            />
+          </CollapsibleTrigger>
+        </h2>
+        <CollapsibleContent>
+          <dl className="grid gap-x-8 gap-y-5 border-t p-4 sm:grid-cols-2">
+            {details.map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-muted-foreground text-sm">{label}</dt>
+                <dd className="mt-1 break-words">{value || "—"}</dd>
+              </div>
+            ))}
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground text-sm">Notes</dt>
+              <dd className="mt-1 break-words whitespace-pre-wrap">
+                {member.notes || "—"}
+              </dd>
+            </div>
+          </dl>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
