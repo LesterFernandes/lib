@@ -1,21 +1,26 @@
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, load_only
+from sqlalchemy.orm import Session, joinedload, load_only
 
-from models import Author, Book, Publisher
+from models import Author, Book, Loan, Member, Publisher
 from schemas import BookCreate, BookUpdate
 from services.exceptions import NotFoundError
 
 
-def list_books(session: Session) -> list[Book]:
-    return list(
-        session.scalars(
-            select(Book)
-            .options(load_only(Book.id, Book.title, Book.author_id, Book.publisher_id))
-            .order_by(Book.title, Book.id)
-        )
+def list_books(session: Session, *, include_loans: bool = False) -> list[Book]:
+    query = (
+        select(Book)
+        .options(load_only(Book.id, Book.title, Book.author_id, Book.publisher_id))
+        .order_by(Book.title, Book.id)
     )
+    if include_loans:
+        query = query.options(
+            joinedload(Book.loans.and_(Loan.returned_at.is_(None)))
+            .joinedload(Loan.member)
+            .load_only(Member.id, Member.card_number, Member.first_name, Member.last_name)
+        )
+    return list(session.scalars(query).unique())
 
 
 def get_book(session: Session, book_id: UUID) -> Book:

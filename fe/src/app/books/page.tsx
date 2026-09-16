@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { useBooks } from "@/hooks/use-library";
+import { PenLine } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function BooksPage() {
   const booksQuery = useBooks();
+  const router = useRouter();
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
@@ -40,13 +44,23 @@ export default function BooksPage() {
       ) : (
         <ul className="divide-y">
           {booksQuery.data.map((book) => (
-            <li key={book.id} className="py-4">
-              <Link
-                href={`/books/${book.id}`}
-                className="font-medium break-words underline underline-offset-4"
-              >
+            <li
+              key={book.id}
+
+              className="group hover:bg-muted/50 focus-within:bg-muted/50 flex items-center justify-between gap-4 rounded-md px-2 py-3"
+            >
+              <span className="min-w-0 font-medium break-words">
                 {book.title}
-              </Link>
+              </span>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "shrink-0 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:opacity-100",
+                )}
+                onClick={() => router.push(`/books/${book.id}`)}
+              >
+                <PenLine aria-hidden="true" className="size-4 shrink-0" />
+              </Button>
             </li>
           ))}
         </ul>

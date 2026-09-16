@@ -158,6 +158,14 @@ class LoanRead(TimestampedSchema):
     returned_at: datetime | None
 
 
+class BookLoanRead(LoanRead):
+    member: MemberListItem
+
+
+class BookListItemWithLoans(BookListItem):
+    loans: list[BookLoanRead]
+
+
 class MemberLoanRead(LoanRead):
     book: BookSummary
 
